@@ -17,7 +17,6 @@ public class Main extends JavaPlugin {
 		
 		new WarpCommands(this);
 		
-//		getServer().getPluginManager().registerEvents(null, this);
 		getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[CostlyWarping]: Plugin enabled!");
 	}
 	

@@ -15,13 +15,12 @@ import markisha.warp.Main;
 
 public class WarpCommands implements CommandExecutor {
 
-	private static final String SECTION = "warps.";
 	private Main plugin;
-//	private ConfigurationSection warps;
+	private ConfigurationSection warps;
 
 	public WarpCommands(Main plugin) {
 		this.plugin = plugin;
-//		this.warps = plugin.getConfig().getConfigurationSection("warps");
+		this.warps = plugin.getConfig().getConfigurationSection("warps");
 		plugin.getCommand("warp").setExecutor(this);
 	}
 
@@ -62,20 +61,20 @@ public class WarpCommands implements CommandExecutor {
 		if (p.getInventory().containsAtLeast(warpTome, 1)) {
 			String name = args[1];
 
-			if (plugin.getConfig().get(SECTION + name) != null) {
+			if (warps.get(name) != null) {
 				p.sendMessage(ChatColor.YELLOW + "A warp with that name already exists.");
 				return false;
 			}
 
 			Location l = p.getLocation();
 
-			plugin.getConfig().set(SECTION + name + ".world", l.getWorld().getName());
-			plugin.getConfig().set(SECTION + name + ".x", l.getX());
-			plugin.getConfig().set(SECTION + name + ".y", l.getY());
-			plugin.getConfig().set(SECTION + name + ".z", l.getZ());
-			plugin.getConfig().set(SECTION + name + ".pitch", l.getPitch());
-			plugin.getConfig().set(SECTION + name + ".yaw", l.getYaw());
-			plugin.getConfig().set(SECTION + name + ".player", p.getDisplayName());
+			warps.set(name + ".world", l.getWorld().getName());
+			warps.set(name + ".x", l.getX());
+			warps.set(name + ".y", l.getY());
+			warps.set(name + ".z", l.getZ());
+			warps.set(name + ".pitch", l.getPitch());
+			warps.set(name + ".yaw", l.getYaw());
+			warps.set(name + ".player", p.getDisplayName());
 			plugin.saveConfig();
 
 			p.getInventory().removeItem(warpTome);
@@ -84,13 +83,12 @@ public class WarpCommands implements CommandExecutor {
 			return true;
 		}
 
-		System.out.println(warpTome.getItemMeta().getDisplayName() + " " + warpTome.getItemMeta().getLore());
 		p.sendMessage(ChatColor.YELLOW + "You need a warp tome to create a new warp.");
 		return false;
 	}
 
 	private boolean warpExists(String name, Player p) {
-		if (plugin.getConfig().get(SECTION + name) == null) {
+		if (warps.get(name) == null) {
 			p.sendMessage(ChatColor.YELLOW + "A warp with that name doesn't exist.");
 			return false;
 		}
@@ -109,13 +107,13 @@ public class WarpCommands implements CommandExecutor {
 		if (!warpExists(name, p))
 			return false;
 
-		if (!p.getDisplayName().equalsIgnoreCase(plugin.getConfig().getString(SECTION + name + ".player"))) {
+		if (!p.getDisplayName().equalsIgnoreCase(warps.getString(name + ".player"))) {
 			p.sendMessage(ChatColor.RED + "You do not have permission to delete this warp. "
 					+ "You can delete only the warps you've created");
 			return false;
 		}
 
-		plugin.getConfig().set(SECTION + name, null);
+		warps.set(name, null);
 		plugin.saveConfig();
 
 		p.sendMessage(ChatColor.GREEN + "Warp " + name + " successfully deleted.");
@@ -128,12 +126,12 @@ public class WarpCommands implements CommandExecutor {
 		if (!warpExists(name, p))
 			return false;
 
-		double x = plugin.getConfig().getDouble(SECTION + name + ".x");
-		double y = plugin.getConfig().getDouble(SECTION + name + ".y");
-		double z = plugin.getConfig().getDouble(SECTION + name + ".z");
-		float yaw = (float) plugin.getConfig().getDouble(SECTION + name + ".yaw");
-		float pitch = (float) plugin.getConfig().getDouble(SECTION + name + ".pitch");
-		String world = plugin.getConfig().getString(SECTION + name + ".world");
+		double x = warps.getDouble(name + ".x");
+		double y = warps.getDouble(name + ".y");
+		double z = warps.getDouble(name + ".z");
+		float yaw = (float) warps.getDouble(name + ".yaw");
+		float pitch = (float) warps.getDouble(name + ".pitch");
+		String world = warps.getString(name + ".world");
 		Location loc = new Location(Bukkit.getWorld(world), x, y, z, yaw, pitch);
 
 		p.teleport(loc);
@@ -142,8 +140,6 @@ public class WarpCommands implements CommandExecutor {
 	}
 
 	private boolean list(Player p, String[] args) {
-		ConfigurationSection warps = plugin.getConfig().getConfigurationSection("warps");
-
 		if (warps.getKeys(false).isEmpty()) {
 			p.sendMessage(ChatColor.YELLOW + "No warps to show.");
 			return false;
@@ -156,7 +152,7 @@ public class WarpCommands implements CommandExecutor {
 
 			int counter = 0;
 			for (String name : warps.getKeys(false)) {
-				if (plugin.getConfig().getString(SECTION + name + ".player").equalsIgnoreCase(nick)) {
+				if (warps.getString(name + ".player").equalsIgnoreCase(nick)) {
 					p.sendMessage(ChatColor.GREEN + name);
 					counter++;
 				}
