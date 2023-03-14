@@ -1,0 +1,9 @@
+name: CostlyWarping
+version: 1.0
+author: markisha
+main: markisha.warp.Main
+api-version: 1.19
+
+commands:
+   warp:
+      description: Create warps and warp to places.
