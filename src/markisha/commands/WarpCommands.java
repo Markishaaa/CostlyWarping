@@ -1,5 +1,10 @@
 package markisha.commands;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -43,6 +48,8 @@ public class WarpCommands implements CommandExecutor {
 					return deleteWarp(p, args);
 				} else if (args[0].equalsIgnoreCase("list")) {
 					return list(p, args);
+				} else if (args[0].equalsIgnoreCase("listPlayer")) {
+					return warpsOfPlayer(p, args);
 				} else {
 					return warp(p, args);
 				}
@@ -139,32 +146,124 @@ public class WarpCommands implements CommandExecutor {
 		return true;
 	}
 
+	private boolean warpsOfPlayer(Player p, String[] args) {
+		if (args.length <= 3) {
+			String nick = args[1];
+			int page;
+
+			try {
+
+				if (args.length == 2)
+					page = 1;
+				else
+					page = Integer.parseInt(args[2]);
+
+			} catch (NumberFormatException nfe) {
+				p.sendMessage(ChatColor.YELLOW + "You must write a page NUMBER.");
+				return false;
+			}
+			
+			if (page < 0) {
+				p.sendMessage(ChatColor.YELLOW + "Maybe write a positive page number?");
+				return false;
+			}
+
+			Set<String> warpSet = warps.getKeys(false);
+			warpSet.stream().filter(w -> warps.getString(w + ".player").equalsIgnoreCase(nick));
+
+			if (!warpSet.isEmpty()) {
+				List<String> warpList = new ArrayList<>(warpSet);
+				Collections.sort(warpList);
+				
+				int startPos = 0;
+				int endPos = 9;
+				for (int i = 1; i < page; i++) {
+					startPos += 10;
+					endPos += 10;
+
+					if (startPos > warpList.size())
+						break;
+				}
+				
+				int i = startPos;
+				if (warpList.size() - 1 >= i) {
+					p.sendMessage(ChatColor.DARK_GREEN + "List of warps by " + nick + " (page " + page + "):");
+
+					while (warpList.size() - 1 >= i && i <= endPos) {
+						p.sendMessage(ChatColor.GREEN + warpList.get(i));
+
+						i++;
+					}
+				} else {
+					p.sendMessage(ChatColor.YELLOW + "No warps by player " + nick + " to show on page " + page + ".");
+					return false;
+				}
+			} else {
+				p.sendMessage(ChatColor.YELLOW + "No warps by " + nick + " to show.");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	private boolean list(Player p, String[] args) {
 		if (warps.getKeys(false).isEmpty()) {
 			p.sendMessage(ChatColor.YELLOW + "No warps to show.");
 			return false;
 		}
 
-		if (args.length >= 2) {
-			String nick = args[1];
+		if (args.length <= 2) {
+			try {
+				int page;
 
-			p.sendMessage(ChatColor.DARK_GREEN + "List of warps created by " + nick + ":");
+				if (args.length == 1)
+					page = 1;
+				else
+					page = Integer.parseInt(args[1]);
 
-			int counter = 0;
-			for (String name : warps.getKeys(false)) {
-				if (warps.getString(name + ".player").equalsIgnoreCase(nick)) {
-					p.sendMessage(ChatColor.GREEN + name);
-					counter++;
+				if (page < 0) {
+					p.sendMessage(ChatColor.YELLOW + "Maybe write a positive page number?");
+					return false;
 				}
-			}
 
-			if (counter == 0) {
-				p.sendMessage(ChatColor.YELLOW + "No warps were created by " + nick + ".");
-			}
-		} else {
-			p.sendMessage(ChatColor.DARK_GREEN + "List of all warps:");
-			for (String name : warps.getKeys(false)) {
-				p.sendMessage(ChatColor.GREEN + name);
+				Set<String> warpSet = warps.getKeys(false);
+
+				if (!warpSet.isEmpty()) {
+					List<String> warpList = new ArrayList<>(warpSet);
+					Collections.sort(warpList);
+
+					int startPos = 0;
+					int endPos = 9;
+					for (int i = 1; i < page; i++) {
+						startPos += 10;
+						endPos += 10;
+
+						if (startPos > warpList.size())
+							break;
+					}
+
+					int i = startPos;
+					if (warpList.size() - 1 >= i) {
+						p.sendMessage(ChatColor.DARK_GREEN + "List of warps (page " + page + "):");
+
+						while (warpList.size() - 1 >= i && i <= endPos) {
+							p.sendMessage(ChatColor.GREEN + warpList.get(i));
+
+							i++;
+						}
+					} else {
+						p.sendMessage(ChatColor.YELLOW + "No warps to show on page " + page + ".");
+						return false;
+					}
+				} else {
+					p.sendMessage(ChatColor.YELLOW + "No warps to show.");
+					return false;
+				}
+
+			} catch (NumberFormatException nfe) {
+				p.sendMessage(ChatColor.YELLOW + "You must write a page NUMBER.");
+				return false;
 			}
 		}
 
