@@ -51,13 +51,13 @@ public class WarpCommands implements CommandExecutor {
 			ItemStack warpTome = wt.getWarpTome();
 
 			if (args.length > 0) {
-				if (args[0].equalsIgnoreCase("create")) {
+				if (args[0].equalsIgnoreCase("create") || args[0].equalsIgnoreCase("add")) {
 					return createWarp(p, warpTome, args);
-				} else if (args[0].equalsIgnoreCase("delete")) {
+				} else if (args[0].equalsIgnoreCase("delete") || args[0].equalsIgnoreCase("remove")) {
 					return deleteWarp(p, args);
 				} else if (args[0].equalsIgnoreCase("list")) {
 					return list(p, args);
-				} else if (args[0].equalsIgnoreCase("listPlayer")) {
+				} else if (args[0].equalsIgnoreCase("listPlayer") || args[0].equalsIgnoreCase("playerList")) {
 					return warpsOfPlayer(p, args);
 				} else {
 					return warp(p, args);
@@ -75,7 +75,7 @@ public class WarpCommands implements CommandExecutor {
 		}
 
 		if (p.getInventory().containsAtLeast(warpTome, 1)) {
-			String name = args[1];
+			String name = args[1].toLowerCase();
 
 			if (warps.get(name) != null) {
 				p.sendMessage(ChatColor.YELLOW + "A warp with that name already exists.");
@@ -113,7 +113,7 @@ public class WarpCommands implements CommandExecutor {
 	}
 
 	private boolean deleteWarp(Player p, String[] args) {
-		String name = args[1];
+		String name = args[1].toLowerCase();
 
 		if (args.length < 2) {
 			p.sendMessage(ChatColor.YELLOW + "Provide a warp name.");
@@ -137,7 +137,7 @@ public class WarpCommands implements CommandExecutor {
 	}
 
 	private boolean warp(Player p, String[] args) {
-		String name = args[0];
+		String name = args[0].toLowerCase();
 
 		if (!warpExists(name, p))
 			return false;
