@@ -25,8 +25,17 @@ public class WarpCommands implements CommandExecutor {
 
 	public WarpCommands(Main plugin) {
 		this.plugin = plugin;
+
+		if (plugin.getConfig().getConfigurationSection("warps") == null) {
+			this.plugin.getConfig().set("warps.ph", "ph");
+			this.plugin.saveConfig();
+			this.plugin.getConfig().set("warps.ph", null);
+			this.plugin.saveConfig();
+		}
 		this.warps = plugin.getConfig().getConfigurationSection("warps");
+
 		plugin.getCommand("warp").setExecutor(this);
+
 	}
 
 	@Override
@@ -147,7 +156,7 @@ public class WarpCommands implements CommandExecutor {
 	}
 
 	private boolean warpsOfPlayer(Player p, String[] args) {
-		if (args.length <= 3) {
+		if (args.length >= 2) {
 			String nick = args[1];
 			int page;
 
@@ -162,19 +171,24 @@ public class WarpCommands implements CommandExecutor {
 				p.sendMessage(ChatColor.YELLOW + "You must write a page NUMBER.");
 				return false;
 			}
-			
+
 			if (page < 0) {
 				p.sendMessage(ChatColor.YELLOW + "Maybe write a positive page number?");
 				return false;
 			}
 
 			Set<String> warpSet = warps.getKeys(false);
-			warpSet.stream().filter(w -> warps.getString(w + ".player").equalsIgnoreCase(nick));
+			List<String> warpList = new ArrayList<>();
+			
+			for (String warpName : warpSet) {
+				if (warps.getString(warpName + ".player").equalsIgnoreCase(nick)) {
+					warpList.add(warpName);
+				}
+			}
 
-			if (!warpSet.isEmpty()) {
-				List<String> warpList = new ArrayList<>(warpSet);
+			if (!warpList.isEmpty()) {
 				Collections.sort(warpList);
-				
+
 				int startPos = 0;
 				int endPos = 9;
 				for (int i = 1; i < page; i++) {
@@ -184,7 +198,7 @@ public class WarpCommands implements CommandExecutor {
 					if (startPos > warpList.size())
 						break;
 				}
-				
+
 				int i = startPos;
 				if (warpList.size() - 1 >= i) {
 					p.sendMessage(ChatColor.DARK_GREEN + "List of warps by " + nick + " (page " + page + "):");
@@ -202,6 +216,9 @@ public class WarpCommands implements CommandExecutor {
 				p.sendMessage(ChatColor.YELLOW + "No warps by " + nick + " to show.");
 				return false;
 			}
+		} else {
+			p.sendMessage(ChatColor.YELLOW + "You must write a nickname.");
+			return false;
 		}
 
 		return true;
