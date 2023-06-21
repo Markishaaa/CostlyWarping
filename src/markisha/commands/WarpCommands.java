@@ -75,9 +75,10 @@ public class WarpCommands implements CommandExecutor {
 		}
 
 		if (p.getInventory().containsAtLeast(warpTome, 1)) {
-			String name = args[1].toLowerCase();
+			String name = args[1];
+			String warp = findWarp(name, p);
 
-			if (warps.get(name) != null) {
+			if (warp != null) {
 				p.sendMessage(ChatColor.YELLOW + "A warp with that name already exists.");
 				return false;
 			}
@@ -103,16 +104,24 @@ public class WarpCommands implements CommandExecutor {
 		return false;
 	}
 
-	private boolean warpExists(String name, Player p) {
-		if (warps.get(name) == null) {
-			p.sendMessage(ChatColor.YELLOW + "A warp with that name doesn't exist.");
-			return false;
+	private String findWarp(String name, Player p) {
+		for (String w : warps.getKeys(false)) {
+			System.out.println(w);
+			
+			if (w.toLowerCase().equals(name.toLowerCase())) {
+				return w;
+			}
 		}
-
-		return true;
+		
+		return null;
 	}
 
 	private boolean deleteWarp(Player p, String[] args) {
+		if (args.length < 2) {
+			p.sendMessage(ChatColor.YELLOW + "Provide a warp name you wish to " + args[0].toLowerCase() + ".");
+			return false;
+		}
+		
 		String name = args[1].toLowerCase();
 
 		if (args.length < 2) {
@@ -120,8 +129,10 @@ public class WarpCommands implements CommandExecutor {
 			return false;
 		}
 
-		if (!warpExists(name, p))
+		if (findWarp(name, p) == null) {
+			p.sendMessage(ChatColor.YELLOW + "A warp with that name doesn't exist.");
 			return false;
+		}
 
 		if (!p.getDisplayName().equalsIgnoreCase(warps.getString(name + ".player"))) {
 			p.sendMessage(ChatColor.RED + "You do not have permission to delete this warp. "
@@ -137,21 +148,25 @@ public class WarpCommands implements CommandExecutor {
 	}
 
 	private boolean warp(Player p, String[] args) {
-		String name = args[0].toLowerCase();
+		String warp = findWarp(args[0], p);
 
-		if (!warpExists(name, p))
+		if (warp == null) {
+			p.sendMessage(ChatColor.YELLOW + "A warp with that name doesn't exist.");
 			return false;
+		}
 
-		double x = warps.getDouble(name + ".x");
-		double y = warps.getDouble(name + ".y");
-		double z = warps.getDouble(name + ".z");
-		float yaw = (float) warps.getDouble(name + ".yaw");
-		float pitch = (float) warps.getDouble(name + ".pitch");
-		String world = warps.getString(name + ".world");
+		double x = warps.getDouble(warp + ".x");
+		double y = warps.getDouble(warp + ".y");
+		double z = warps.getDouble(warp + ".z");
+		float yaw = (float) warps.getDouble(warp + ".yaw");
+		float pitch = (float) warps.getDouble(warp + ".pitch");
+		String world = warps.getString(warp + ".world");
 		Location loc = new Location(Bukkit.getWorld(world), x, y, z, yaw, pitch);
 
 		p.teleport(loc);
-		p.sendMessage(ChatColor.GREEN + "Teleported to " + name + ".");
+		
+		plugin.getServer().broadcastMessage(ChatColor.GREEN + p.getDisplayName() + " warped to " + ChatColor.DARK_PURPLE + warp + ChatColor.GREEN + ".");
+		
 		return true;
 	}
 
@@ -204,7 +219,7 @@ public class WarpCommands implements CommandExecutor {
 					p.sendMessage(ChatColor.DARK_GREEN + "List of warps by " + nick + " (page " + page + "):");
 
 					while (warpList.size() - 1 >= i && i <= endPos) {
-						p.sendMessage(ChatColor.GREEN + warpList.get(i));
+						p.sendMessage(ChatColor.DARK_PURPLE + warpList.get(i));
 
 						i++;
 					}
@@ -265,7 +280,7 @@ public class WarpCommands implements CommandExecutor {
 						p.sendMessage(ChatColor.DARK_GREEN + "List of warps (page " + page + "):");
 
 						while (warpList.size() - 1 >= i && i <= endPos) {
-							p.sendMessage(ChatColor.GREEN + warpList.get(i));
+							p.sendMessage(ChatColor.DARK_PURPLE + warpList.get(i));
 
 							i++;
 						}
