@@ -12,8 +12,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import markisha.items.WarpTome;
 import markisha.warp.Main;
@@ -147,6 +149,20 @@ public class WarpCommands implements CommandExecutor {
 		return true;
 	}
 
+	private void warpVehicle(Entity vehicle, Location loc) {
+		if (vehicle == null)
+			return;
+
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				cancel();
+			}
+		}.runTaskTimer(plugin, 40L, 0L);
+		
+		vehicle.teleport(loc);
+	}
+
 	private boolean warp(Player p, String[] args) {
 		String warp = findWarp(args[0], p);
 
@@ -154,6 +170,8 @@ public class WarpCommands implements CommandExecutor {
 			p.sendMessage(ChatColor.YELLOW + "A warp with that name doesn't exist.");
 			return false;
 		}
+
+		Entity vehicle = p.getVehicle();
 
 		double x = warps.getDouble(warp + ".x");
 		double y = warps.getDouble(warp + ".y");
@@ -164,6 +182,7 @@ public class WarpCommands implements CommandExecutor {
 		Location loc = new Location(Bukkit.getWorld(world), x, y, z, yaw, pitch);
 
 		p.teleport(loc);
+		warpVehicle(vehicle, loc);
 		
 		plugin.getServer().broadcastMessage(ChatColor.GREEN + p.getDisplayName() + " warped to " + ChatColor.DARK_PURPLE + warp + ChatColor.GREEN + ".");
 		
@@ -194,7 +213,7 @@ public class WarpCommands implements CommandExecutor {
 
 			Set<String> warpSet = warps.getKeys(false);
 			List<String> warpList = new ArrayList<>();
-			
+
 			for (String warpName : warpSet) {
 				if (warps.getString(warpName + ".player").equalsIgnoreCase(nick)) {
 					warpList.add(warpName);
