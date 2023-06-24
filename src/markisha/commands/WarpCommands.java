@@ -1,6 +1,7 @@
 package markisha.commands;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -24,20 +25,19 @@ public class WarpCommands implements CommandExecutor {
 
 	private Main plugin;
 	private ConfigurationSection warps;
+	private WarpTabCompleter tabCompleter;
 
-	public WarpCommands(Main plugin) {
+	private List<String> commandsList;
+
+	public WarpCommands(Main plugin, ConfigurationSection warps, WarpTabCompleter tabCompleter) {
 		this.plugin = plugin;
+		this.warps = warps;
 
-		if (plugin.getConfig().getConfigurationSection("warps") == null) {
-			this.plugin.getConfig().set("warps.ph", "ph");
-			this.plugin.saveConfig();
-			this.plugin.getConfig().set("warps.ph", null);
-			this.plugin.saveConfig();
-		}
-		this.warps = plugin.getConfig().getConfigurationSection("warps");
+		this.commandsList = Arrays.asList("add", "create", "remove", "delete", "list", "playerList", "listPlayer");
 
 		plugin.getCommand("warp").setExecutor(this);
-
+		
+		this.tabCompleter = tabCompleter;
 	}
 
 	@Override
@@ -78,6 +78,16 @@ public class WarpCommands implements CommandExecutor {
 
 		if (p.getInventory().containsAtLeast(warpTome, 1)) {
 			String name = args[1];
+
+			for (String cmd : commandsList) {
+				if (name.equalsIgnoreCase(cmd)) {
+					p.sendMessage(ChatColor.RED + "Cannot use reservered keywords as warp names.");
+					p.sendMessage(ChatColor.RED + "Reserved keywords: \"add\", \"create\", "
+							+ "\"remove\", \"delete\", \"list\", \"playerList\", \"listPlayer\".");
+					return false;
+				}
+			}
+
 			String warp = findWarp(name, p);
 
 			if (warp != null) {
@@ -99,6 +109,8 @@ public class WarpCommands implements CommandExecutor {
 			p.getInventory().removeItem(warpTome);
 
 			p.sendMessage(ChatColor.GREEN + "Warp set!");
+			
+			tabCompleter.updateTabComplete();
 			return true;
 		}
 
@@ -108,13 +120,11 @@ public class WarpCommands implements CommandExecutor {
 
 	private String findWarp(String name, Player p) {
 		for (String w : warps.getKeys(false)) {
-			System.out.println(w);
-			
 			if (w.toLowerCase().equals(name.toLowerCase())) {
 				return w;
 			}
 		}
-		
+
 		return null;
 	}
 
@@ -123,8 +133,8 @@ public class WarpCommands implements CommandExecutor {
 			p.sendMessage(ChatColor.YELLOW + "Provide a warp name you wish to " + args[0].toLowerCase() + ".");
 			return false;
 		}
-		
-		String name = args[1].toLowerCase();
+
+		String name = findWarp(args[1], p);
 
 		if (args.length < 2) {
 			p.sendMessage(ChatColor.YELLOW + "Provide a warp name.");
@@ -146,6 +156,8 @@ public class WarpCommands implements CommandExecutor {
 		plugin.saveConfig();
 
 		p.sendMessage(ChatColor.GREEN + "Warp " + name + " successfully deleted.");
+		
+		tabCompleter.updateTabComplete();
 		return true;
 	}
 
@@ -159,7 +171,7 @@ public class WarpCommands implements CommandExecutor {
 				cancel();
 			}
 		}.runTaskTimer(plugin, 40L, 0L);
-		
+
 		vehicle.teleport(loc);
 	}
 
@@ -183,9 +195,10 @@ public class WarpCommands implements CommandExecutor {
 
 		p.teleport(loc);
 		warpVehicle(vehicle, loc);
-		
-		plugin.getServer().broadcastMessage(ChatColor.GREEN + p.getDisplayName() + " warped to " + ChatColor.DARK_PURPLE + warp + ChatColor.GREEN + ".");
-		
+
+		plugin.getServer().broadcastMessage(ChatColor.GREEN + p.getDisplayName() + " warped to " + ChatColor.DARK_PURPLE
+				+ warp + ChatColor.GREEN + ".");
+
 		return true;
 	}
 
