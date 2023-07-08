@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
@@ -18,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import markisha.events.LeashEntities;
 import markisha.items.WarpTome;
 import markisha.warp.Main;
 
@@ -36,7 +38,7 @@ public class WarpCommands implements CommandExecutor {
 		this.commandsList = Arrays.asList("add", "create", "remove", "delete", "list", "playerList", "listPlayer");
 
 		plugin.getCommand("warp").setExecutor(this);
-		
+
 		this.tabCompleter = tabCompleter;
 	}
 
@@ -109,7 +111,7 @@ public class WarpCommands implements CommandExecutor {
 			p.getInventory().removeItem(warpTome);
 
 			p.sendMessage(ChatColor.GREEN + "Warp set!");
-			
+
 			tabCompleter.updateTabComplete();
 			return true;
 		}
@@ -156,23 +158,46 @@ public class WarpCommands implements CommandExecutor {
 		plugin.saveConfig();
 
 		p.sendMessage(ChatColor.GREEN + "Warp " + name + " successfully deleted.");
-		
+
 		tabCompleter.updateTabComplete();
 		return true;
 	}
 
-	private void warpVehicle(Entity vehicle, Location loc) {
-		if (vehicle == null)
-			return;
-
+	private void delayWarp() {
 		new BukkitRunnable() {
 			@Override
 			public void run() {
 				cancel();
 			}
 		}.runTaskTimer(plugin, 40L, 0L);
+	}
+	
+	private void warpVehicle(Entity vehicle, Location loc) {
+		if (vehicle == null)
+			return;
+
+		delayWarp();
 
 		vehicle.teleport(loc);
+	}
+
+	private void warpLeashedEntities(Player p, Location loc) {
+		Map<Player, List<Entity>> leashedEntities = LeashEntities.leashedEntities;
+
+		if (!leashedEntities.containsKey(p))
+			return;
+		if (leashedEntities.get(p) == null)
+			return;
+		if(leashedEntities.get(p).isEmpty())
+			return;
+		
+		delayWarp();
+		
+		List<Entity> entities = leashedEntities.get(p);
+		
+		for (Entity e : entities) {
+			e.teleport(loc);
+		}
 	}
 
 	private boolean warp(Player p, String[] args) {
@@ -195,6 +220,7 @@ public class WarpCommands implements CommandExecutor {
 
 		p.teleport(loc);
 		warpVehicle(vehicle, loc);
+		warpLeashedEntities(p, loc);
 
 		plugin.getServer().broadcastMessage(ChatColor.GREEN + p.getDisplayName() + " warped to " + ChatColor.DARK_PURPLE
 				+ warp + ChatColor.GREEN + ".");

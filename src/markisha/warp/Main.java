@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import markisha.commands.WarpCommands;
 import markisha.commands.WarpTabCompleter;
+import markisha.events.LeashEntities;
 import markisha.items.WarpTome;
 
 public class Main extends JavaPlugin {
@@ -32,6 +33,8 @@ public class Main extends JavaPlugin {
 		wt.init();
 
 		loadConfig();
+		
+		getServer().getPluginManager().registerEvents(new LeashEntities(), this);
 		
 		new WarpCommands(this, warps, tabCompleter);
 		
