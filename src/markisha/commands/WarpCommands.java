@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
@@ -19,8 +18,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import markisha.events.LeashEntities;
 import markisha.items.WarpTome;
+import markisha.utils.LeashEntities;
 import markisha.warp.Main;
 
 public class WarpCommands implements CommandExecutor {
@@ -30,6 +29,8 @@ public class WarpCommands implements CommandExecutor {
 	private WarpTabCompleter tabCompleter;
 
 	private List<String> commandsList;
+	
+	private LeashEntities leashEntities;
 
 	public WarpCommands(Main plugin, ConfigurationSection warps, WarpTabCompleter tabCompleter) {
 		this.plugin = plugin;
@@ -40,6 +41,8 @@ public class WarpCommands implements CommandExecutor {
 		plugin.getCommand("warp").setExecutor(this);
 
 		this.tabCompleter = tabCompleter;
+		
+		this.leashEntities = new LeashEntities();
 	}
 
 	@Override
@@ -181,21 +184,13 @@ public class WarpCommands implements CommandExecutor {
 		vehicle.teleport(loc);
 	}
 
-	private void warpLeashedEntities(Player p, Location loc) {
-		Map<Player, List<Entity>> leashedEntities = LeashEntities.leashedEntities;
-
-		if (!leashedEntities.containsKey(p))
-			return;
-		if (leashedEntities.get(p) == null)
-			return;
-		if(leashedEntities.get(p).isEmpty())
+	private void warpLeashedEntities(List<Entity> leashedEntities, Player p, Location loc) {
+		if(leashedEntities.isEmpty())
 			return;
 		
 		delayWarp();
 		
-		List<Entity> entities = leashedEntities.get(p);
-		
-		for (Entity e : entities) {
+		for (Entity e : leashedEntities) {
 			e.teleport(loc);
 		}
 	}
@@ -218,9 +213,11 @@ public class WarpCommands implements CommandExecutor {
 		String world = warps.getString(warp + ".world");
 		Location loc = new Location(Bukkit.getWorld(world), x, y, z, yaw, pitch);
 
+		List<Entity> leashedEntities = leashEntities.getLeashedEntities(p);
+		
 		p.teleport(loc);
 		warpVehicle(vehicle, loc);
-		warpLeashedEntities(p, loc);
+		warpLeashedEntities(leashedEntities, p, loc);
 
 		plugin.getServer().broadcastMessage(ChatColor.GREEN + p.getDisplayName() + " warped to " + ChatColor.DARK_PURPLE
 				+ warp + ChatColor.GREEN + ".");
