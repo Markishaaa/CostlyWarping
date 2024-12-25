@@ -93,7 +93,7 @@ public class WarpCommands implements CommandExecutor {
 				}
 			}
 
-			String warp = findWarp(name, p);
+			String warp = findWarp(name);
 
 			if (warp != null) {
 				p.sendMessage(ChatColor.YELLOW + "A warp with that name already exists.");
@@ -123,7 +123,7 @@ public class WarpCommands implements CommandExecutor {
 		return false;
 	}
 
-	private String findWarp(String name, Player p) {
+	private String findWarp(String name) {
 		for (String w : warps.getKeys(false)) {
 			if (w.toLowerCase().equals(name.toLowerCase())) {
 				return w;
@@ -139,14 +139,14 @@ public class WarpCommands implements CommandExecutor {
 			return false;
 		}
 
-		String name = findWarp(args[1], p);
+		String name = findWarp(args[1]);
 
 		if (args.length < 2) {
 			p.sendMessage(ChatColor.YELLOW + "Provide a warp name.");
 			return false;
 		}
 
-		if (findWarp(name, p) == null) {
+		if (findWarp(name) == null) {
 			p.sendMessage(ChatColor.YELLOW + "A warp with that name doesn't exist.");
 			return false;
 		}
@@ -196,7 +196,7 @@ public class WarpCommands implements CommandExecutor {
 	}
 
 	private boolean warp(Player p, String[] args) {
-		String warp = findWarp(args[0], p);
+		String warp = findWarp(args[0]);
 
 		if (warp == null) {
 			p.sendMessage(ChatColor.YELLOW + "A warp with that name doesn't exist.");
